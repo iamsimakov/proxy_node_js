@@ -1,37 +1,37 @@
-Установка node.js 
-Ставим зависимости
+п»їРЈСЃС‚Р°РЅРѕРІРєР° node.js 
+РЎС‚Р°РІРёРј Р·Р°РІРёСЃРёРјРѕСЃС‚Рё
 sudo apt-get install g++ curl libssl-dev
-Идем http://nodejs.org/dist/
-Смотрим какая там последняя версия, в моем случае это файл node-v0.12.2.tar.gz
-качаем его
+РРґРµРј http://nodejs.org/dist/
+РЎРјРѕС‚СЂРёРј РєР°РєР°СЏ С‚Р°Рј РїРѕСЃР»РµРґРЅСЏСЏ РІРµСЂСЃРёСЏ, РІ РјРѕРµРј СЃР»СѓС‡Р°Рµ СЌС‚Рѕ С„Р°Р№Р» node-v0.12.2.tar.gz
+РєР°С‡Р°РµРј РµРіРѕ
 wget http://nodejs.org/dist/v0.12.2/node-v0.12.2.tar.gz
-распаковываем
+СЂР°СЃРїР°РєРѕРІС‹РІР°РµРј
 tar -xzf node-v0.12.2.tar.gz
-собираем
+СЃРѕР±РёСЂР°РµРј
 cd node-v0.12.2.tar.gz
 ./configure
 make
-Устанавливаем
+РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј
 sudo make install
 
-Пишем скрипт, который на любой запрос отвечает «Hello World!»
+РџРёС€РµРј СЃРєСЂРёРїС‚, РєРѕС‚РѕСЂС‹Р№ РЅР° Р»СЋР±РѕР№ Р·Р°РїСЂРѕСЃ РѕС‚РІРµС‡Р°РµС‚ В«Hello World!В»
 var http = require('http');
 http.createServer(function (req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('Hello World!\n');
 }).listen(1337, "127.0.0.1");
 console.log('Server running at http://127.0.0.1:1337/');
-Сохраняем
-Запускаем сервер
+РЎРѕС…СЂР°РЅСЏРµРј
+Р—Р°РїСѓСЃРєР°РµРј СЃРµСЂРІРµСЂ
 node hello-world.js
-где .js это наш файл скрипта
-Делаем запрос серверу
+РіРґРµ .js СЌС‚Рѕ РЅР°С€ С„Р°Р№Р» СЃРєСЂРёРїС‚Р°
+Р”РµР»Р°РµРј Р·Р°РїСЂРѕСЃ СЃРµСЂРІРµСЂСѓ
 curl http://127.0.0.1:1337
-Видим ответ
+Р’РёРґРёРј РѕС‚РІРµС‚
 Hello World!
 
 
-Прокси-сервер считает сколько ядер в вашей системе и создает столько процессов.
+РџСЂРѕРєСЃРё-СЃРµСЂРІРµСЂ СЃС‡РёС‚Р°РµС‚ СЃРєРѕР»СЊРєРѕ СЏРґРµСЂ РІ РІР°С€РµР№ СЃРёСЃС‚РµРјРµ Рё СЃРѕР·РґР°РµС‚ СЃС‚РѕР»СЊРєРѕ РїСЂРѕС†РµСЃСЃРѕРІ.
 
 var http = require('http');
 var fs = require("fs");
@@ -62,7 +62,7 @@ if (cluster.isMaster) {
 	strSeconds = (dateObj.getSeconds() < 10) ? "0"+String(dateObj.getSeconds()) : String(dateObj.getSeconds()),
 	strDate = "[<" + dateObj.getFullYear() + "-" + strMonth + "-" + strDay + "> " + strHour + ":" + strMinutes + ":" + strSeconds + "] ";
 	
-	//[<YYYY-MM-DD> hh:mm:ss] <ip пользователя> <тип запроса> <url>
+	//[<YYYY-MM-DD> hh:mm:ss] <ip РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ> <С‚РёРї Р·Р°РїСЂРѕСЃР°> <url>
     var ssilka = url.parse(req.url);
 	
 	var stroka = strDate + " " + req.connection.remoteAddress + " " + req.method + " " +  ssilka.href + "\n";
@@ -70,15 +70,15 @@ if (cluster.isMaster) {
 	fs.open("./log.txt", "a", 0644, function(err, file_handle) {
 		if (!err) {
 			fs.write(file_handle, stroka, null, 'utf8', function(err, written) {
-			if (err) // Произошла ошибка при записи
+			if (err) // РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° РїСЂРё Р·Р°РїРёСЃРё
 				{
-				res.write("\nПроизошла ошибка при записи");
+				res.write("\nРџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° РїСЂРё Р·Р°РїРёСЃРё");
 				fs.close;
 				}
 			});
 		} else {
-		// Обработка ошибок при открытии
-		res.write("\nПроизошла ошибка при открытии");
+		// РћР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє РїСЂРё РѕС‚РєСЂС‹С‚РёРё
+		res.write("\nРџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° РїСЂРё РѕС‚РєСЂС‹С‚РёРё");
 		fs.close;
 		}
 	});
