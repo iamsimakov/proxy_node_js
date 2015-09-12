@@ -1,0 +1,158 @@
+Нагрузочное тестирование блога RoR и прокси-сервера на node.js
+
+установка ab:
+sudo apt-get install apache2-utils
+
+Сводная таблица
+
+Сервер	Запросов/
+Одновременных	Время теста	Потери	Загрузка CPU	Загрузка памяти
+RoR	100/10	27,5 с	нет	98,9 %	10 %
+	100/100	-	83%	100 %	11 %
+Node.js
+cluster	5000/1000	6,5 с	нет	~65 %(на каждое ядро)	3 %
+Node.js	5000/1000	8,2 с	нет	100 %	3,6 %
+
+
+Сервер RoR запускался на том же ПК, с которого и проводилось тестирование.
+При запуске 100 запросов и одновременных 10 запросах потерь не наблюдалось. 
+ 
+ alexey@alexey-pc:~$ ab -n 100 -c 10 http://localhost:3000/articles
+This is ApacheBench, Version 2.3 <$Revision: 1604373 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient).....done
+
+
+Server Software:        WEBrick/1.3.1
+Server Hostname:        localhost
+Server Port:            3000
+
+Document Path:          /articles
+Document Length:        5328 bytes
+
+Concurrency Level:      10
+Time taken for tests:   27.491 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      610900 bytes
+HTML transferred:       532800 bytes
+Requests per second:    3.64 [#/sec] (mean)
+Time per request:       2749.053 [ms] (mean)
+Time per request:       274.905 [ms] (mean, across all concurrent requests)
+Transfer rate:          21.70 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.6      0       4
+Processing:   296 2624 431.5   2727    2921
+Waiting:      294 2621 431.6   2724    2920
+Total:        300 2624 431.0   2727    2923
+
+Percentage of the requests served within a certain time (ms)
+  50%   2727
+  66%   2746
+  75%   2755
+  80%   2766
+  90%   2855
+  95%   2880
+  98%   2916
+  99%   2923
+ 100%   2923 (longest request)
+ 
+Затем было запущено 100 запросов, все одновременно.
+ 
+alexey@alexey-pc:~$ ab -n 100 -c 100 http://localhost:3000/articles
+This is ApacheBench, Version 2.3 <$Revision: 1604373 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)...apr_socket_recv: Connection reset by peer (104)
+Total of 17 requests completed
+
+Здесь возникли проблемы, сервер не ответил на большую часть запросов.
+
+Вывод top не отличался и был примерно одинаков как в первом, так и во втором случае.
+
+PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND   
+4496 alexey    20   0  172752 102088   8732 S  98,9 10,1   1:58.60 ruby 
+
+Слабым местом явно является процессор.
+
+
+Тестирование прокси сервера также проводилось на том же компьютере, на котором запускался тест.
+Этот тест показал результаты получше.
+Был запущен тест из 5000 запросов при одновременной отправке 1000 запросов.
+Потерь не наблюдалось.
+
+alexey@alexey-pc:~$ ab -n 5000 -c 1000 http://localhost:8080/ya.ru
+This is ApacheBench, Version 2.3 <$Revision: 1604373 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 500 requests
+Completed 1000 requests
+Completed 1500 requests
+Completed 2000 requests
+Completed 2500 requests
+Completed 3000 requests
+Completed 3500 requests
+Completed 4000 requests
+Completed 4500 requests
+Completed 5000 requests
+Finished 5000 requests
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8080
+
+Document Path:          /ya.ru
+Document Length:        126 bytes
+
+Concurrency Level:      1000
+Time taken for tests:   6.819 seconds
+Complete requests:      5000
+Failed requests:        0
+Total transferred:      1135000 bytes
+HTML transferred:       630000 bytes
+Requests per second:    733.24 [#/sec] (mean)
+Time per request:       1363.809 [ms] (mean)
+Time per request:       1.364 [ms] (mean, across all concurrent requests)
+Transfer rate:          162.54 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0   27  50.4      1     153
+Processing:   100 1197 339.9   1265    1595
+Waiting:       86 1195 342.0   1263    1594
+Total:        252 1224 297.5   1267    1595
+
+Percentage of the requests served within a certain time (ms)
+  50%   1267
+  66%   1290
+  75%   1369
+  80%   1461
+  90%   1525
+  95%   1561
+  98%   1568
+  99%   1574
+ 100%   1595 (longest request)
+
+Нагрузка на процессор однако была более 50-60%, что тоже не позволило бы разместить на
+этом же компьютере еще 1 сервер.
+
+PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND  
+ 5884 alexey    20   0   84924  28384  10956 S  68,9  2,8   0:06.79 node       
+ 5879 alexey    20   0   51044  20628  11116 R  65,0  2,0   0:06.37 node       
+ 5889 alexey    20   0   86048  26668  10988 S  64,0  2,6   0:06.64 node       
+ 5895 alexey    20   0   86044  26748  11012 R  62,3  2,6   0:06.69 node       
+ 5894 alexey    20   0   85968  26500  10908 R  58,4  2,6   0:06.65 node 
+ 
+ Однако оптимизация с помощью cluster явно положительна.
+ Для примера, те же 5000 запросов, но без этого модуля.
+ 
+ PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND    
+ 6040 alexey    20   0   87448  36928  11044 R 104,2  3,6   0:06.40 node   
