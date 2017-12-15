@@ -3,6 +3,7 @@ var fs = require("fs");
 var textFile = "";
 var url = require("url");
 var cluster = require('cluster');
+var request = require('request');
 
 if (cluster.isMaster) {
   var numCPUs = require('os').cpus().length;
@@ -16,7 +17,7 @@ if (cluster.isMaster) {
 } else{
 	
 	http.createServer(function (req, res) {
-		res.writeHead(200, {'Content-Type': 'text/plain'});
+		// res.writeHead(200, {'Content-Type': 'text/plain'});
 	
 	var 
 	dateObj = new Date(),
@@ -48,10 +49,19 @@ if (cluster.isMaster) {
 		}
 	});
 	
-	res.write("Your request: " + stroka + "\nIt was been added.");
-	res.write("\nThis answer comes from the process " + process.pid);
+	// res.write("Your request: " + stroka + "\nIt was been added.");
+	// res.write("\nThis answer comes from the process " + process.pid);
 	
-	res.end();
+	// res.end();
+
+	var x = request.get( 'http:/' + req.url).on('error',
+	function(error){
+		console.log('ERROR:', req.url , error.message )
+		res.end()
+	})
+
+	req.pipe(x)
+	x.pipe(res)
 
 	}).listen(8080);
 }
